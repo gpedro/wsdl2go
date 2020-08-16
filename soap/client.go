@@ -105,7 +105,7 @@ func doRoundTrip(c *Client, setHeaders func(*http.Request), in, out Message) err
 		TNSAttr:      c.ThisNamespace,
 		XSIAttr:      XSINamespace,
 		Header:       c.Header,
-		Body:         in,
+		Body:         Body{Message: in},
 	}
 
 	if req.EnvelopeAttr == "" {
@@ -158,14 +158,9 @@ func doRoundTrip(c *Client, setHeaders func(*http.Request), in, out Message) err
 		}
 	}
 
-	marshalStructure := struct {
-		XMLName xml.Name `xml:"Envelope"`
-		Body    Message
-	}{Body: out}
-
 	decoder := xml.NewDecoder(resp.Body)
 	decoder.CharsetReader = charset.NewReaderLabel
-	return decoder.Decode(&marshalStructure)
+	return decoder.Decode(out)
 }
 
 // RoundTrip implements the RoundTripper interface.
@@ -248,5 +243,10 @@ type Envelope struct {
 	URNAttr      string   `xml:"xmlns:urn,attr,omitempty"`
 	XSIAttr      string   `xml:"xmlns:xsi,attr,omitempty"`
 	Header       Message  `xml:"SOAP-ENV:Header"`
-	Body         Message  `xml:"SOAP-ENV:Body"`
+	Body         Body
+}
+
+type Body struct {
+	XMLName xml.Name `xml:"SOAP-ENV:Body"`
+	Message Message
 }
